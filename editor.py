@@ -19,9 +19,12 @@ class ZenTextEdit(QTextEdit):
         self.setStyleSheet('QTextEdit { background-color: #FFFFFF; }');
         #self.setStyleSheet('QTextEdit { background-color: #FDF6E3; }');
 
-        self.justify()
-        self.spacify()
+    def setPlainText(self, text):
+        
+        super(ZenTextEdit, self).setPlainText(text)
 
+        #self.justify()
+        self.spacify()
 
     def resizeEvent(self, re):
 
