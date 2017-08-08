@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
-import signal, re
+import signal
 
-from PyQt5.QtCore import QFile, Qt, QTimer, QByteArray, QFileInfo
+from PyQt5.QtCore import QTranslator, QFile, Qt, QTimer, QByteArray, QFileInfo, QMargins
 from PyQt5.QtGui import QFont, QTextCharFormat, QTextDocumentWriter
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow, QMenu,
-        QMessageBox, QSplitter, QListWidgetItem)
+from PyQt5.QtWidgets import (QWidget, QApplication, QFileDialog, QMainWindow, QMenu,
+        QMessageBox, QSplitter, QVBoxLayout)
 
-from utils import throttle
+from pubsub import pub
+
 from editor import ZenTextEdit
 from highlighter import Highlighter
+from status_bar import StatusBar
+from quote_bar import QuoteBar
 from toc import TocView
 
 AUTOSAVE_TIMEOUT = 5000
@@ -18,7 +21,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        self.setWindowTitle("Syntax Highlighter")
+        self.setWindowTitle('Syntax Highlighter')
         self.current_filepath = None
 
         splitter = QSplitter()
@@ -28,9 +31,25 @@ class MainWindow(QMainWindow):
         self.setupHelpMenu()
         self.setupEditor()
 
+
+        right_pane_layout_wrapper = QWidget()
+        right_pane_layout = QVBoxLayout(right_pane_layout_wrapper)
+
+        # Avoid weird spacing between layout and it's wrapper
+        right_pane_layout.setSpacing(0)
+        right_pane_layout.setContentsMargins(QMargins(0, 0, 0, 0))
+
+        status_bar = StatusBar()
+        quote_bar = QuoteBar()
+
         splitter.setOrientation(Qt.Horizontal)
         splitter.addWidget(self.toc)
-        splitter.addWidget(self.editor)
+
+        right_pane_layout.addWidget(quote_bar.getWrapper())
+        right_pane_layout.addWidget(self.editor)
+        right_pane_layout.addWidget(status_bar.getWrapper())
+
+        splitter.addWidget(right_pane_layout_wrapper)
 
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
@@ -41,33 +60,29 @@ class MainWindow(QMainWindow):
 
 
     def about(self):
-        QMessageBox.about(self, "About ZenWriter",
-                "<h1>ZenWriter</h1> by Eduardo Mohedano")
+        QMessageBox.about(self, 'About ZenWriter',
+                '<h1>ZenWriter</h1> by Eduardo Mohedano')
 
     def setupEditor(self):
 
         self.editor = ZenTextEdit()
-
-        self.editor.textChanged.connect(self.onTextEditorChanged)
-        self.toc.itemPressed.connect(self.editor.onIndexPressed)
-
         self.highlighter = Highlighter(self.editor.document())        
 
     def setupFileMenu(self):
-        fileMenu = QMenu("&File", self)
+        fileMenu = QMenu(self.tr('File'), self)
         self.menuBar().addMenu(fileMenu)
 
-        fileMenu.addAction("&New...", self.newFile, "Ctrl+N")
-        fileMenu.addAction("&Open...", self.openFile, "Ctrl+O")
-        fileMenu.addAction("&Save...", self.saveFile, "Ctrl+S")
-        fileMenu.addAction("Save &As...", self.saveFileAs, Qt.CTRL + Qt.SHIFT + Qt.Key_S)
-        fileMenu.addAction("E&xit", QApplication.instance().quit, "Ctrl+Q")
+        fileMenu.addAction(self.tr('New File'), self.newFile, 'Ctrl+N')
+        fileMenu.addAction(self.tr('Open...'), self.openFile, 'Ctrl+O')
+        fileMenu.addAction(self.tr('Save'), self.saveFile, 'Ctrl+S')
+        fileMenu.addAction(self.tr('Save As...'), self.saveFileAs, Qt.CTRL + Qt.SHIFT + Qt.Key_S)
+        fileMenu.addAction('Exit', QApplication.instance().quit, 'Ctrl+Q')
 
     def setupHelpMenu(self):
-        helpMenu = QMenu("&Help", self)
+        helpMenu = QMenu(self.tr('Help'), self)
         self.menuBar().addMenu(helpMenu)
 
-        helpMenu.addAction("&About", self.about)
+        helpMenu.addAction(self.tr('About'), self.about)
 
 
     def newFile(self):
@@ -88,7 +103,7 @@ class MainWindow(QMainWindow):
         else:
             shownName = QFileInfo(self.current_filepath).fileName()
 
-        self.setWindowTitle(self.tr("%s[*]" % (shownName)))
+        self.setWindowTitle('%s[*]' % (shownName))
         self.setWindowModified(False)
 
     def openFile(self, path=None):
@@ -97,8 +112,8 @@ class MainWindow(QMainWindow):
             return
 
         if not path:
-            path, _ = QFileDialog.getOpenFileName(self, "Open File", '',
-                "Plain Text Files (*.txt *.md)")
+            path, _ = QFileDialog.getOpenFileName(self, 'Open File', '',
+                'Plain Text Files (*.txt *.md)')
 
         if path:
             inFile = QFile(path)
@@ -139,8 +154,8 @@ class MainWindow(QMainWindow):
         return success
 
     def saveFileAs(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Save as...", None,
-                "Markdown (*.md);; Plain Text (*.txt);;All Files (*)")
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save as...', None,
+                'Markdown (*.md);; Plain Text (*.txt);;All Files (*)')
 
         if not filename:
             return False
@@ -156,9 +171,9 @@ class MainWindow(QMainWindow):
         if not self.editor.document().isModified():
             return True
 
-        ret = QMessageBox.warning(self, "Application",
-                "The document has been modified.\n"
-                "Do you want to save your changes?",
+        ret = QMessageBox.warning(self, 'Application',
+                'The document has been modified.\n'
+                'Do you want to save your changes?',
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
 
         if ret == QMessageBox.Save:
@@ -179,31 +194,7 @@ class MainWindow(QMainWindow):
     def autosave(self):
     
         self.saveFile(False)
-
-    @throttle(seconds=1)
-    def onTextEditorChanged(self):
-
-        text = self.editor.toPlainText()
-        lines = text.split('\n')
-
-        self.toc.clear()
-
-        for key, line in enumerate(lines):
-
-            line = line.strip()
-
-            if len(line) > 0 and line[0] == '#':
-
-                element = {
-                    'text' : line.replace('#', '    '),
-                    'line' : key
-                }
-
-                item = QListWidgetItem(element['text'])
-                item.setData(Qt.UserRole, element)
-
-                self.toc.addItem(item)
-
+    
 
     def closeEvent(self, e):
         if self.ensureSaved():
@@ -214,8 +205,14 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
 
     import sys
+    
+    translator = QTranslator()
+    translator.load('translate/es_MX.qm')
+
 
     app = QApplication(sys.argv)
+    app.installTranslator(translator)
+
     window = MainWindow()
     window.resize(800, 600)
     window.show()

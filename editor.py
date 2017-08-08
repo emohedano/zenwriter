@@ -2,6 +2,11 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat
 from PyQt5.QtWidgets import QTextEdit
 
+from pubsub import pub
+from utils import throttle
+
+from events import EDITOR_TEXT_CHANGED, TOC_SELECTION_CHANGED
+
 class ZenTextEdit(QTextEdit):
 
     def __init__(self):
@@ -16,8 +21,10 @@ class ZenTextEdit(QTextEdit):
         self.setAcceptRichText(False)
         self.setFont(font)
 
-        self.setStyleSheet('QTextEdit { background-color: #FFFFFF; }');
-        #self.setStyleSheet('QTextEdit { background-color: #FDF6E3; }');
+        self.setStyleSheet('QTextEdit { background-color: #FFFFFF; border:none; }')
+
+        self.textChanged.connect(self.onTextChanged)
+        pub.subscribe(self.onTocSelection, TOC_SELECTION_CHANGED)
 
     def setPlainText(self, text):
         
@@ -28,9 +35,8 @@ class ZenTextEdit(QTextEdit):
 
     def resizeEvent(self, re):
 
-        self.setViewportMargins(50, 50, 50, 0)
+        self.setViewportMargins(50, 25, 50, 25)
         super(ZenTextEdit, self).resizeEvent(re)
-
 
     def justify(self):
 
@@ -60,13 +66,13 @@ class ZenTextEdit(QTextEdit):
 
         while currentBlock.isValid():
 
-            cursor = QTextCursor(currentBlock);
+            cursor = QTextCursor(currentBlock)
             cursor.setBlockFormat(line_height_style)
 
             currentBlock = currentBlock.next()
 
 
-    def onIndexPressed(self, item):
+    def onTocSelection(self, item):
 
         line = item.data(Qt.UserRole)['line']
         
@@ -74,3 +80,10 @@ class ZenTextEdit(QTextEdit):
 
         cursor = QTextCursor(self.document().findBlockByLineNumber(line))
         self.setTextCursor(cursor)
+
+    @throttle(seconds=1)
+    def onTextChanged(self):
+
+        text = self.toPlainText()
+
+        pub.sendMessage(EDITOR_TEXT_CHANGED, text=text)
