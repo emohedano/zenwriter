@@ -2,10 +2,11 @@
 
 import signal
 
-from PyQt5.QtCore import QTranslator, QFile, Qt, QTimer, QByteArray, QFileInfo, QMargins
+from PyQt5.QtCore import QTranslator, QFile, Qt, QTimer, QByteArray, QFileInfo, QMargins, QUrl
 from PyQt5.QtGui import QFont, QTextCharFormat, QTextDocumentWriter
 from PyQt5.QtWidgets import (QWidget, QApplication, QFileDialog, QMainWindow, QMenu,
-        QMessageBox, QSplitter, QVBoxLayout)
+        QMessageBox, QSplitter, QVBoxLayout, QTabWidget)
+from PyQt5.QtQuick import QQuickView
 
 from pubsub import pub
 
@@ -14,6 +15,7 @@ from highlighter import Highlighter
 from status_bar import StatusBar
 from quote_bar import QuoteBar
 from toc import TocView
+from dict_pane import DictPane
 
 AUTOSAVE_TIMEOUT = 5000
 
@@ -24,35 +26,46 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Syntax Highlighter')
         self.current_filepath = None
 
-        splitter = QSplitter()
-        self.toc = TocView()
-
         self.setupFileMenu()
         self.setupHelpMenu()
         self.setupEditor()
 
+        splitter = QSplitter()
+        splitter.setOrientation(Qt.Horizontal)
+        
+        toc_pane = TocView()
+        quote_bar = QuoteBar()
+        status_bar = StatusBar()
+        dict_pane = DictPane()
 
-        right_pane_layout_wrapper = QWidget()
-        right_pane_layout = QVBoxLayout(right_pane_layout_wrapper)
+
+        left_pane_tabs = QTabWidget()
+        left_pane_tabs.addTab(toc_pane, 'Índice')
+        left_pane_tabs.addTab(QWidget(), 'My Drive')
+
+        center_pane_layout_wrapper = QWidget()
+        center_pane_layout = QVBoxLayout(center_pane_layout_wrapper)
+
+        right_pane_tabs = QTabWidget()
+        right_pane_tabs.addTab(dict_pane.getWrapper(), 'Diccionario')
+        right_pane_tabs.addTab(QWidget(), 'Notas')
+        right_pane_tabs.addTab(QWidget(), 'Estadísticas')
 
         # Avoid weird spacing between layout and it's wrapper
-        right_pane_layout.setSpacing(0)
-        right_pane_layout.setContentsMargins(QMargins(0, 0, 0, 0))
+        center_pane_layout.setSpacing(0)
+        center_pane_layout.setContentsMargins(QMargins(0, 0, 0, 0))
 
-        status_bar = StatusBar()
-        quote_bar = QuoteBar()
+        center_pane_layout.addWidget(quote_bar.getWrapper())
+        center_pane_layout.addWidget(self.editor)
+        center_pane_layout.addWidget(status_bar.getWrapper())
 
-        splitter.setOrientation(Qt.Horizontal)
-        splitter.addWidget(self.toc)
-
-        right_pane_layout.addWidget(quote_bar.getWrapper())
-        right_pane_layout.addWidget(self.editor)
-        right_pane_layout.addWidget(status_bar.getWrapper())
-
-        splitter.addWidget(right_pane_layout_wrapper)
-
+        splitter.addWidget(left_pane_tabs)
+        splitter.addWidget(center_pane_layout_wrapper)
+        splitter.addWidget(right_pane_tabs)
+        
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
+        splitter.setStretchFactor(2, 1)
 
         self.setCentralWidget(splitter)
 
