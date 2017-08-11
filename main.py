@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(parent)
 
         self.setWindowTitle('Syntax Highlighter')
-        self.current_filepath = None
+        self.currentFilepath = None
 
         self.setupFileMenu()
         self.setupHelpMenu()
@@ -33,35 +33,35 @@ class MainWindow(QMainWindow):
         splitter = QSplitter()
         splitter.setOrientation(Qt.Horizontal)
         
-        toc_pane = TocView()
-        quote_bar = QuoteBar()
-        status_bar = StatusBar()
-        dict_pane = DictPane()
+        tocPane = TocView()
+        quoteBar = QuoteBar()
+        statusBar = StatusBar()
+        dictPane = DictPane()
 
 
-        left_pane_tabs = QTabWidget()
-        left_pane_tabs.addTab(toc_pane, 'Índice')
-        left_pane_tabs.addTab(QWidget(), 'My Drive')
+        leftPaneTabs = QTabWidget()
+        leftPaneTabs.addTab(tocPane, 'Índice')
+        leftPaneTabs.addTab(QWidget(), 'My Drive')
 
-        center_pane_layout_wrapper = QWidget()
-        center_pane_layout = QVBoxLayout(center_pane_layout_wrapper)
+        centerPaneLayoutWrapper = QWidget()
+        centerPaneLayout = QVBoxLayout(centerPaneLayoutWrapper)
 
-        right_pane_tabs = QTabWidget()
-        right_pane_tabs.addTab(dict_pane.getWrapper(), 'Diccionario')
-        right_pane_tabs.addTab(QWidget(), 'Notas')
-        right_pane_tabs.addTab(QWidget(), 'Estadísticas')
+        rightPaneTabs = QTabWidget()
+        rightPaneTabs.addTab(dictPane.getWrapper(), 'Diccionario')
+        rightPaneTabs.addTab(QWidget(), 'Notas')
+        rightPaneTabs.addTab(QWidget(), 'Estadísticas')
 
         # Avoid weird spacing between layout and it's wrapper
-        center_pane_layout.setSpacing(0)
-        center_pane_layout.setContentsMargins(QMargins(0, 0, 0, 0))
+        centerPaneLayout.setSpacing(0)
+        centerPaneLayout.setContentsMargins(QMargins(0, 0, 0, 0))
 
-        center_pane_layout.addWidget(quote_bar.getWrapper())
-        center_pane_layout.addWidget(self.editor)
-        center_pane_layout.addWidget(status_bar.getWrapper())
+        centerPaneLayout.addWidget(quoteBar.getWrapper())
+        centerPaneLayout.addWidget(self.editor)
+        centerPaneLayout.addWidget(statusBar.getWrapper())
 
-        splitter.addWidget(left_pane_tabs)
-        splitter.addWidget(center_pane_layout_wrapper)
-        splitter.addWidget(right_pane_tabs)
+        splitter.addWidget(leftPaneTabs)
+        splitter.addWidget(centerPaneLayoutWrapper)
+        splitter.addWidget(rightPaneTabs)
         
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
@@ -106,15 +106,15 @@ class MainWindow(QMainWindow):
         self.editor.clear()
         self.setCurrentFileName()
 
-    def setCurrentFileName(self, current_filepath=None):
+    def setCurrentFileName(self, currentFilepath=None):
         
-        self.current_filepath = current_filepath
+        self.currentFilepath = currentFilepath
         self.editor.document().setModified(False)
 
-        if not self.current_filepath:
+        if not self.currentFilepath:
             shownName = 'untitled.txt'
         else:
-            shownName = QFileInfo(self.current_filepath).fileName()
+            shownName = QFileInfo(self.currentFilepath).fileName()
 
         self.setWindowTitle('%s[*]' % (shownName))
         self.setWindowModified(False)
@@ -144,14 +144,14 @@ class MainWindow(QMainWindow):
 
     def saveFile(self, prompt=True):
         
-        if not self.current_filepath:
+        if not self.currentFilepath:
 
             if prompt:
                 return self.saveFileAs()
             else:
                 return
         
-        writer = QTextDocumentWriter(self.current_filepath)
+        writer = QTextDocumentWriter(self.currentFilepath)
         
         ba = QByteArray()
         ba.append('plaintext')
@@ -199,10 +199,10 @@ class MainWindow(QMainWindow):
 
     def initAutoSave(self):
         
-        self.autosave_timer = QTimer()
+        self.autosaveTimer = QTimer()
 
-        self.autosave_timer.timeout.connect(self.autosave)
-        self.autosave_timer.start(AUTOSAVE_TIMEOUT)
+        self.autosaveTimer.timeout.connect(self.autosave)
+        self.autosaveTimer.start(AUTOSAVE_TIMEOUT)
 
     def autosave(self):
     

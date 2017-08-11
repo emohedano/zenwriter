@@ -3,15 +3,17 @@ from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QListWidget, QLineEdit
 
 from mrc_service import MRCService
 
-STYLES ={
-    
-    "SEARCHBOX" : """
+STYLES = {
+
+    "SEARCHBOX": """
         border-bottom: 2px solid;
         border-color: #CCCCCC;
         padding-bottom: 2;
         padding-top: 2
     """
 }
+
+
 class DictPane(QVBoxLayout):
 
     def __init__(self):
@@ -28,30 +30,29 @@ class DictPane(QVBoxLayout):
         self.searchbox.setFrame(False)
         self.searchbox.returnPressed.connect(self.onReturnPressed)
 
-        self.words_list = QListWidget()
-        self.words_list.setStyleSheet('QListWidget::item { height: 30; }');
-        self.words_list.itemPressed.connect(self.onItemPressed)
+        self.wordsList = QListWidget()
+        self.wordsList.setStyleSheet('QListWidget::item { height: 30; }')
+        self.wordsList.itemPressed.connect(self.onItemPressed)
 
-        definition_wrapper = QWidget()
-        definition_layout = QVBoxLayout(definition_wrapper)
+        definitionWrapper = QWidget()
+        definitionLayout = QVBoxLayout(definitionWrapper)
 
         # Avoid weird spacing between layout and it's wrapper
-        definition_layout.setSpacing(0)
-        definition_layout.setContentsMargins(QMargins(0, 0, 0, 0))
+        definitionLayout.setSpacing(0)
+        definitionLayout.setContentsMargins(QMargins(0, 0, 0, 0))
 
-        self.definition_text = QLabel()
-        self.definition_text.setOpenExternalLinks(True)
-        self.definition_text.setWordWrap(True);
+        self.definitionText = QLabel()
+        self.definitionText.setOpenExternalLinks(True)
+        self.definitionText.setWordWrap(True)
 
-        definition_label = QLabel(self.tr('Definición'))
+        definitionLabel = QLabel(self.tr('Definición'))
 
-        definition_layout.addWidget(definition_label)
-        definition_layout.addWidget(self.definition_text)
+        definitionLayout.addWidget(definitionLabel)
+        definitionLayout.addWidget(self.definitionText)
 
         self.addWidget(self.searchbox, 1)
-        self.addWidget(self.words_list, 9)
-        self.addWidget(definition_wrapper, 10, Qt.AlignTop)
-
+        self.addWidget(self.wordsList, 9)
+        self.addWidget(definitionWrapper, 10, Qt.AlignTop)
 
         data = MRCService.find_synonyms('oscuro')
         self.displaySearchResults(data)
@@ -61,16 +62,15 @@ class DictPane(QVBoxLayout):
         return self.wrapper
 
     def onReturnPressed(self):
-        
+
         searchword = self.searchbox.text()
         data = MRCService.find_synonyms(searchword)
 
         self.displaySearchResults(data)
 
-
     def displaySearchResults(self, results):
 
-        self.words_list.clear()
+        self.wordsList.clear()
 
         for result in results:
 
@@ -78,16 +78,15 @@ class DictPane(QVBoxLayout):
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, result)
 
-            self.words_list.addItem(item)
-
+            self.wordsList.addItem(item)
 
     def onItemPressed(self, word):
-        
+
         self.displayWordDetail(word.data(Qt.UserRole))
 
     def displayWordDetail(self, word):
 
-        gloss = word.gloss;
+        gloss = word.gloss
 
         if gloss == 'None':
             gloss = ''
@@ -101,5 +100,4 @@ class DictPane(QVBoxLayout):
             <a href="https://en.wikipedia.org/wiki/{1}"> Ver en Wikipedia (inglés)</a>
         """.format(word.type, word.word, gloss)
 
-        self.definition_text.setText(label)
-
+        self.definitionText.setText(label)

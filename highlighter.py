@@ -2,6 +2,7 @@ from PyQt5.QtGui import QFont, QSyntaxHighlighter, QTextCharFormat
 
 import pmh4python
 
+
 class Highlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
 
@@ -34,23 +35,21 @@ class Highlighter(QSyntaxHighlighter):
         self.highlightingRules['STRONG'] = STRONG
         self.highlightingRules['EMPH'] = EMPH
 
-
     def highlightBlock(self, text):
 
         results = pmh4python.parse_markdown(text)
 
-        for element_type, elements in results.items():
+        for elementType, elements in results.items():
 
-            if element_type in self.highlightingRules:
+            if elementType in self.highlightingRules:
 
-                element_styles = self.highlightingRules[element_type]
+                elementStyles = self.highlightingRules[elementType]
 
                 for element in elements:
 
                     index = element['start']
                     length = element['end'] - index
 
-                    self.setFormat(index, length, element_styles)
-
+                    self.setFormat(index, length, elementStyles)
 
         self.setCurrentBlockState(0)

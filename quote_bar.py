@@ -6,6 +6,7 @@ import json
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget
 
+
 class QuoteBar(QVBoxLayout):
 
     def __init__(self):
@@ -16,12 +17,12 @@ class QuoteBar(QVBoxLayout):
 
         self.wrapper.setStyleSheet('background-color: #FAFAFA')
 
-        self.quote_label = QLabel()
-        self.author_label = QLabel()
+        self.quoteLabel = QLabel()
+        self.authorLabel = QLabel()
 
-        self.quote_label.setAlignment(Qt.AlignHCenter)
-        self.quote_label.setWordWrap(True)
-        self.author_label.setAlignment(Qt.AlignRight)
+        self.quoteLabel.setAlignment(Qt.AlignHCenter)
+        self.quoteLabel.setWordWrap(True)
+        self.authorLabel.setAlignment(Qt.AlignRight)
 
         """
         url = 'http://quotes.rest/qod.json'
@@ -38,8 +39,8 @@ class QuoteBar(QVBoxLayout):
 
         self.displayQuote()
 
-        self.addWidget(self.quote_label)
-        self.addWidget(self.author_label)
+        self.addWidget(self.quoteLabel)
+        self.addWidget(self.authorLabel)
 
     def getWrapper(self):
 
@@ -47,5 +48,5 @@ class QuoteBar(QVBoxLayout):
 
     def displayQuote(self):
 
-        self.quote_label.setText('"' + self.quote_text + '"')
-        self.author_label.setText('- ' + self.quote_author)
+        self.quoteLabel.setText('"' + self.quote_text + '"')
+        self.authorLabel.setText('- ' + self.quote_author)

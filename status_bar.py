@@ -10,6 +10,7 @@ from events import EDITOR_TEXT_CHANGED
 
 WPM = 200
 
+
 class StatusBar(QHBoxLayout):
 
     def __init__(self):
@@ -22,13 +23,13 @@ class StatusBar(QHBoxLayout):
 
         self.word_count = 0
 
-        self.word_count_label = QLabel()
-        self.paragraph_count_label = QLabel()
-        self.reading_time_label = QLabel()
+        self.wordCountLabel = QLabel()
+        self.paragraphCountLabel = QLabel()
+        self.readingTimeLabel = QLabel()
 
-        self.addWidget(self.word_count_label)
-        self.addWidget(self.paragraph_count_label)
-        self.addWidget(self.reading_time_label)   
+        self.addWidget(self.wordCountLabel)
+        self.addWidget(self.paragraphCountLabel)
+        self.addWidget(self.readingTimeLabel)
 
         pub.subscribe(self.onEditorTextChanges, EDITOR_TEXT_CHANGED)
 
@@ -40,7 +41,7 @@ class StatusBar(QHBoxLayout):
 
         count = len(text.split('\n\n'))
         label = self.tr('paragraphs')
-        self.paragraph_count_label.setText('{0} {1}'.format(count, label))
+        self.paragraphCountLabel.setText('{0} {1}'.format(count, label))
 
     def countWords(self, text):
 
@@ -53,24 +54,21 @@ class StatusBar(QHBoxLayout):
         count = "{:,}".format(count)
 
         label = self.tr('words')
-        self.word_count_label.setText('{0} {1}'.format(count, label))
+        self.wordCountLabel.setText('{0} {1}'.format(count, label))
 
     def onEditorTextChanges(self, text):
-        
+
         self.countParagraphs(text)
         self.displayWordCount(text)
         self.estimateReadingTime()
 
-
     def estimateReadingTime(self):
 
-        minutes = math.floor(self.word_count/WPM)
+        minutes = math.floor(self.word_count / WPM)
 
         h, m = divmod(minutes, 60)
         d, h = divmod(h, 24)
 
         label = self.tr('Estimated reading time')
-        self.reading_time_label.setText('{0}: {1}d {2}h {3}m'.format(label, d, h, m))
-        
-        
-        
+        self.readingTimeLabel.setText(
+            '{0}: {1}d {2}h {3}m'.format(label, d, h, m))

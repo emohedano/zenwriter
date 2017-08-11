@@ -5,8 +5,9 @@ from pubsub import pub
 
 from events import EDITOR_TEXT_CHANGED, TOC_SELECTION_CHANGED
 
+
 class TocView(QListWidget):
-    
+
     def __init__(self):
         super(TocView, self).__init__()
 
@@ -32,8 +33,8 @@ class TocView(QListWidget):
             if len(line) > 0 and line[0] == '#':
 
                 element = {
-                    'text' : line.replace('#', '    '),
-                    'line' : key
+                    'text': line.replace('#', '    '),
+                    'line': key
                 }
 
                 item = QListWidgetItem(element['text'])

@@ -2,25 +2,27 @@ import sqlite3
 conn = sqlite3.connect('/Users/mohedano/mcr30.sqlite')
 
 WORD_TYPES = {
-    'n' : 'n.',
-    'v' : 'v.',
-    'a' : 'adj.',
-    'r' : 'adv.'
+    'n': 'n.',
+    'v': 'v.',
+    'a': 'adj.',
+    'r': 'adv.'
 }
+
 
 class MRCModel():
 
-    def __init__(self, lang, iliId, localId, word, word_type, score, sense, gloss):
+    def __init__(self, lang, iliId, localId, word, wordType, score, sense, gloss):
 
         self.lang = lang
         self.iliId = iliId
         self.localId = localId
         self.word = word
-        self.type = WORD_TYPES[word_type]
+        self.type = WORD_TYPES[wordType]
         self.sense = sense
         self.score = score
         self.gloss = gloss
         self.examples = []
+
 
 class MRCService:
 
@@ -77,8 +79,9 @@ class MRCService:
         results = c.execute(query, (word, word))
 
         for row in results:
-            
-            model = MRCModel( row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7] )
+
+            model = MRCModel(row[0], row[1], row[2], row[3],
+                             row[4], row[5], row[6], row[7])
             data.append(model)
 
         return data
