@@ -1,7 +1,10 @@
 from PyQt5.QtCore import Qt, QMargins
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QListWidget, QLineEdit, QListWidgetItem
 
+from pubsub import pub
+
 from mrc_service import MRCService
+from events import EDITOR_REQUEST_FOR_SYNONYM
 
 STYLES = {
 
@@ -22,7 +25,7 @@ class DictPane(QVBoxLayout):
 
         super(DictPane, self).__init__(self.wrapper)
 
-        self.wrapper.setStyleSheet('background-color: #FFFFFF')
+        self.wrapper.setStyleSheet('background-color: #FFFFFF; QListWidget{ border: none; }')
 
         self.searchbox = QLineEdit()
         self.searchbox.setPlaceholderText('Buscar palabra...')
@@ -32,7 +35,7 @@ class DictPane(QVBoxLayout):
 
         self.wordsList = QListWidget()
         self.wordsList.setStyleSheet('QListWidget::item { height: 30; }')
-        self.wordsList.itemPressed.connect(self.onItemPressed)
+        self.wordsList.currentItemChanged.connect(self.onSelectionChanged)
 
         definitionWrapper = QWidget()
         definitionLayout = QVBoxLayout(definitionWrapper)
@@ -42,8 +45,10 @@ class DictPane(QVBoxLayout):
         definitionLayout.setContentsMargins(QMargins(0, 0, 0, 0))
 
         self.definitionText = QLabel()
-        self.definitionText.setOpenExternalLinks(True)
         self.definitionText.setWordWrap(True)
+        self.definitionText.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.LinksAccessibleByMouse)
+        self.definitionText.setOpenExternalLinks(True)
+
 
         definitionLabel = QLabel(self.tr('Definición'))
 
@@ -57,6 +62,8 @@ class DictPane(QVBoxLayout):
         data = MRCService.find_synonyms('oscuro')
         self.displaySearchResults(data)
 
+        pub.subscribe(self.lookUpDefinitions, EDITOR_REQUEST_FOR_SYNONYM)
+
     def getWrapper(self):
 
         return self.wrapper
@@ -64,9 +71,17 @@ class DictPane(QVBoxLayout):
     def onReturnPressed(self):
 
         searchword = self.searchbox.text()
-        data = MRCService.find_synonyms(searchword)
+        self.lookUpDefinitions(searchword)
 
-        self.displaySearchResults(data)
+    def lookUpDefinitions(self, word):
+
+        self.searchbox.setText(word)
+        data = MRCService.find_synonyms(word)
+
+        if not data:
+            self.displayEmptySearchResults(word)
+        else:
+            self.displaySearchResults(data)
 
     def displaySearchResults(self, results):
 
@@ -74,30 +89,60 @@ class DictPane(QVBoxLayout):
 
         for result in results:
 
-            label = '{0} ({1})'.format(result.word, result.lang)
+            label = '{0} {1}_{2}'.format(result.type, result.word, result.sense)
+
             item = QListWidgetItem(label)
             item.setData(Qt.UserRole, result)
 
             self.wordsList.addItem(item)
 
-    def onItemPressed(self, word):
+    def displayEmptySearchResults(self, word):
 
-        self.displayWordDetail(word.data(Qt.UserRole))
+        self.wordsList.clear()
+        self.wordsList.addItem('No se encontraron coincidencias')
 
-    def displayWordDetail(self, word):
+        label = """<b>{0}</b> <br><br>
+            <a href="http://www.wordreference.com/es/en/translation.asp?spen={0}"> WordReference</a><br>
+            <a href="https://es.wikipedia.org/wiki/{0}"> Wikipedia (español)</a><br>
+            <a href="https://en.wikipedia.org/wiki/{0}"> Wikipedia (inglés)</a>
+        """.format(word)
 
-        gloss = word.gloss
+        self.definitionText.setText(label)
+
+    def onSelectionChanged(self, currentItem, previousItem):
+
+        if not currentItem:
+            return
+
+        mrcWord = currentItem.data(Qt.UserRole)
+        self.displayWordDetail(mrcWord)
+
+    def displayWordDetail(self, mrcWord):
+
+        if not mrcWord:
+            return
+
+        gloss = mrcWord.gloss
+        examples = ''
+        synonyms = ''
 
         if gloss == 'None':
             gloss = ''
         else:
             gloss += '<br><br>'
 
-        label = """<i>{0}</i> <b>{1}</b> <br><br>
-            {2}
-            <a href="http://www.wordreference.com/es/en/translation.asp?spen={1}"> Ver en WordReference</a><br>
-            <a href="https://es.wikipedia.org/wiki/{1}"> Ver en Wikipedia (español)</a><br>
-            <a href="https://en.wikipedia.org/wiki/{1}"> Ver en Wikipedia (inglés)</a>
-        """.format(word.type, word.word, gloss)
+        if mrcWord.synonyms:
+            synonyms = (', ').join(mrcWord.synonyms)
+            synonyms = 'Sinónimos: <i>' + synonyms + '</i><br><br>'
+
+        if mrcWord.examples:
+            examples = ('<br>').join(mrcWord.examples)
+            examples = 'Ejemplos:<br><br><i>' + examples + '</i>'
+
+        label = """<i>{0}</i> <b>{1}_{5}</b> <br><br>
+            {2}{3}{4}
+            <a href="http://www.wordreference.com/es/en/translation.asp?spen={1}"> WordReference</a>, 
+            <a href="https://es.wikipedia.org/wiki/{1}"> Wikipedia </a>
+        """.format(mrcWord.type, mrcWord.word, gloss, synonyms, examples, mrcWord.sense)
 
         self.definitionText.setText(label)

@@ -20,68 +20,96 @@ class MRCModel():
         self.type = WORD_TYPES[wordType]
         self.sense = sense
         self.score = score
-        self.gloss = gloss
+        self.gloss = gloss if gloss != 'None' else None
         self.examples = []
+        self.synonyms = []
 
+    def fetchEngDefinition(self):
+
+        c = conn.cursor()
+
+        if self.gloss:
+            return
+
+        query = """
+            select syn.gloss
+            from "wei_eng-30_variant" var
+            inner join "wei_eng-30_synset" syn
+                on syn.offset = var.offset
+            inner join "wei_eng-30_to_ili" ili
+                on ili.offset = syn.offset
+            where ili.iliOffset = ?
+        """
+        
+        results = c.execute(query, (self.iliId,))
+
+        glosses = results.fetchone()
+
+        if glosses:
+            self.gloss = glosses[0]
+
+    def fetchSynonyms(self):
+
+        c = conn.cursor()
+
+        query = """
+            select word
+            from "wei_spa-30_variant" var
+            where offset = ?
+        """
+        
+        results = c.execute(query, (self.localId,))
+
+        self.synonyms = [ i[0] for  i in results.fetchall() ]
+
+    def fetchExamples(self):
+
+        c = conn.cursor()
+
+        if self.examples:
+            return
+
+        query = """
+            select examples from "wei_{0}-30_examples" exa
+            where exa.offset = ?;
+        """.format(self.lang)
+        
+        results = c.execute(query, (self.localId,))
+
+        results = [ i[0] for  i in results.fetchall()]
+        self.examples = results
 
 class MRCService:
 
     @staticmethod
-    def find_synonyms(word):
+    def find_synonyms(_word):
 
+        word = _word.lower()
         data = []
         c = conn.cursor()
 
-        query = ("""
-            select * from (
-                select 'spa' as 'lang', ili2.iliOffset, var.offset, var.word, var.pos, var.csco, var.sense, syn.gloss
-                from "wei_spa-30_relation" rel
-                inner join "wei_relations" r
-                on r.id = rel.relation
-                inner join "wei_spa-30_variant" var
-                on var.offset = rel.targetSynset
-                inner join "wei_spa-30_synset" syn
+        query = """
+            select 'spa', ili.iliOffset, var.offset, var.word, var.pos, 100, var.sense, syn.gloss
+            from "wei_spa-30_variant" var
+            inner join "wei_spa-30_synset" syn
                 on syn.offset = var.offset
-                inner join "wei_spa-30_to_ili" ili
-                on ili.offset = var.offset
-                inner join "wei_spa-30_to_ili" ili2
-                on ili2.offset = rel.sourceSynset
-                where r.name = 'near_synonym'
-                and rel.sourcePos = rel.targetPos
-                and rel.sourceSynset in (select offset from "wei_spa-30_variant" where word = ?)
+            inner join "wei_spa-30_to_ili" ili
+                on ili.offset = syn.offset
+            where var.word = ?
+        """
 
-                union
-
-                select 'eng' as 'lang', ili2.iliOffset, var.offset, var.word, var.pos, var.csco, var.sense, syn.gloss
-                from "wei_eng-30_relation" rel
-                inner join "wei_relations" r
-                on r.id = rel.relation
-                inner join "wei_eng-30_variant" var
-                on var.offset = rel.targetSynset
-                inner join "wei_eng-30_synset" syn
-                on syn.offset = var.offset
-                inner join "wei_eng-30_to_ili" ili
-                on ili.offset = var.offset
-                inner join "wei_eng-30_to_ili" ili2
-                on ili2.offset = rel.sourceSynset
-                where r.name = 'near_synonym'
-                and rel.sourcePos = rel.targetPos
-                and rel.sourceSynset in (
-                    select offset from "wei_eng-30_to_ili" where iliOffset in (
-                        select iliOffset from "wei_spa-30_to_ili" where offset in(
-                            select offset from "wei_spa-30_variant" where word = ?
-                        )
-                    )
-                ) 
-            ) order by lang desc, csco desc, sense desc;
-        """)
-
-        results = c.execute(query, (word, word))
-
+        results = c.execute(query, (word,))
+        
         for row in results:
 
             model = MRCModel(row[0], row[1], row[2], row[3],
                              row[4], row[5], row[6], row[7])
+
+            model.fetchEngDefinition()
+            model.fetchSynonyms()
+            model.fetchExamples()
+            
             data.append(model)
 
         return data
+
