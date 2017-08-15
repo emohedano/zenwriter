@@ -6,6 +6,7 @@ import json
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget
 
+from quotes_service import QuotesService
 
 class QuoteBar(QVBoxLayout):
 
@@ -24,18 +25,7 @@ class QuoteBar(QVBoxLayout):
         self.quoteLabel.setWordWrap(True)
         self.authorLabel.setAlignment(Qt.AlignRight)
 
-        """
-        url = 'http://quotes.rest/qod.json'
-        f = urllib.request.urlopen(url)
-        body = f.read().decode('utf-8')
-
-        quote = json.loads(body)['contents']['quotes'][0]
-        text = quote['quote']
-        author = quote['author']
-        """
-
-        self.quote_text = 'Estoy convencido de que la autoeducación es el único tipo de educación que existe'
-        self.quote_author = 'Isaac Asimov'
+        self.quote = QuotesService.getRandomQuote()
 
         self.displayQuote()
 
@@ -48,5 +38,5 @@ class QuoteBar(QVBoxLayout):
 
     def displayQuote(self):
 
-        self.quoteLabel.setText('"' + self.quote_text + '"')
-        self.authorLabel.setText('- ' + self.quote_author)
+        self.quoteLabel.setText('"' + self.quote.text + '"')
+        self.authorLabel.setText('- ' + self.quote.author)
