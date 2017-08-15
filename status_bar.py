@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from pubsub import pub
+from langdetect import detect
 
 from events import EDITOR_TEXT_CHANGED
 
@@ -21,14 +22,15 @@ class StatusBar(QHBoxLayout):
 
         self.wrapper.setStyleSheet('background-color: #FAFAFA')
 
-        self.word_count = 0
+        self.wordCount = 0
+        self.currentLang = 'N/A'
 
         self.wordCountLabel = QLabel()
-        self.paragraphCountLabel = QLabel()
+        self.langLabel = QLabel()
         self.readingTimeLabel = QLabel()
 
+        self.addWidget(self.langLabel)
         self.addWidget(self.wordCountLabel)
-        self.addWidget(self.paragraphCountLabel)
         self.addWidget(self.readingTimeLabel)
 
         pub.subscribe(self.onEditorTextChanges, EDITOR_TEXT_CHANGED)
@@ -37,16 +39,10 @@ class StatusBar(QHBoxLayout):
 
         return self.wrapper
 
-    def countParagraphs(self, text):
-
-        count = len(text.split('\n\n'))
-        label = self.tr('paragraphs')
-        self.paragraphCountLabel.setText('{0} {1}'.format(count, label))
-
     def countWords(self, text):
 
-        self.word_count = len(re.findall(r'\b\w+\b', text))
-        return self.word_count
+        self.wordCount = len(re.findall(r'\b\w+\b', text))
+        return self.wordCount
 
     def displayWordCount(self, text):
 
@@ -58,13 +54,13 @@ class StatusBar(QHBoxLayout):
 
     def onEditorTextChanges(self, text):
 
-        self.countParagraphs(text)
         self.displayWordCount(text)
         self.estimateReadingTime()
+        self.detectLang(text)
 
     def estimateReadingTime(self):
 
-        minutes = math.floor(self.word_count / WPM)
+        minutes = math.floor(self.wordCount / WPM)
 
         h, m = divmod(minutes, 60)
         d, h = divmod(h, 24)
@@ -72,3 +68,18 @@ class StatusBar(QHBoxLayout):
         label = self.tr('Estimated reading time')
         self.readingTimeLabel.setText(
             '{0}: {1}d {2}h {3}m'.format(label, d, h, m))
+
+    def detectLang(self, text):
+
+        try:
+            
+            abstract = text[:1000]
+            self.currentLang = detect(abstract)
+
+            self.currentLang = self.currentLang.upper()
+
+            label = self.tr('Language')
+            self.langLabel.setText('{0}: {1}'.format(label, self.currentLang))
+
+        except Exception as e:
+            pass
