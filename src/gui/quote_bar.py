@@ -6,7 +6,7 @@ import json
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget
 
-from quotes_service import QuotesService
+from services.quotes_service import QuotesService
 
 class QuoteBar(QVBoxLayout):
 

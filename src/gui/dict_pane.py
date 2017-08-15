@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QListWidget, QLineEdit
 
 from pubsub import pub
 
-from mrc_service import MRCService
-from events import EDITOR_REQUEST_FOR_SYNONYM
+from services.mrc_service import MRCService
+from utils.events import EDITOR_REQUEST_FOR_SYNONYM
 
 STYLES = {
 

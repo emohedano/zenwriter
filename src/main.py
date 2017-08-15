@@ -10,12 +10,12 @@ from PyQt5.QtQuick import QQuickView
 
 from pubsub import pub
 
-from editor import ZenTextEdit
-from highlighter import Highlighter
-from status_bar import StatusBar
-from quote_bar import QuoteBar
-from toc import TocView
-from dict_pane import DictPane
+from gui.editor import ZenTextEdit
+from gui.highlighter import Highlighter
+from gui.status_bar import StatusBar
+from gui.quote_bar import QuoteBar
+from gui.toc import TocView
+from gui.dict_pane import DictPane
 
 AUTOSAVE_TIMEOUT = 5000
 
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     translator = QTranslator()
     translator.load('translate/es_MX.qm')
 
-    stylesFile = QFile('qss/MetroLite.qss')
+    stylesFile = QFile('stylesheets/MetroLite.qss')
     stylesFile.open(QFile.ReadOnly | QFile.Text)
     styleSheet = stylesFile.readAll()
     styleSheet = str(styleSheet, encoding='utf-8')

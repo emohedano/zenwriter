@@ -1,3 +1,3 @@
-SOURCES += main.py
-SOURCES += status_bar.py
-TRANSLATIONS += translate/es_MX.ts
+SOURCES += src/main.py
+SOURCES += src/gui/status_bar.py
+TRANSLATIONS += src/translate/es_MX.ts

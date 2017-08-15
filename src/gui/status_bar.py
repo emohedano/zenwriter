@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QHBoxLayout, QLabel, QWidget
 from pubsub import pub
 from langdetect import detect
 
-from events import EDITOR_TEXT_CHANGED
+from utils.events import EDITOR_TEXT_CHANGED
 
 WPM = 200
 

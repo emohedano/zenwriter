@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QTextEdit
 from pubsub import pub
 from utils import throttle
 
-from events import EDITOR_TEXT_CHANGED, TOC_SELECTION_CHANGED, EDITOR_REQUEST_FOR_SYNONYM
+from utils.events import EDITOR_TEXT_CHANGED, TOC_SELECTION_CHANGED, EDITOR_REQUEST_FOR_SYNONYM
 
 
 class ZenTextEdit(QTextEdit):

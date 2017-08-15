@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 
 from pubsub import pub
 
-from events import EDITOR_TEXT_CHANGED, TOC_SELECTION_CHANGED
+from utils.events import EDITOR_TEXT_CHANGED, TOC_SELECTION_CHANGED
 
 
 class TocView(QListWidget):
