@@ -222,9 +222,14 @@ if __name__ == '__main__':
     translator = QTranslator()
     translator.load('translate/es_MX.qm')
 
+    stylesFile = QFile('qss/MetroLite.qss')
+    stylesFile.open(QFile.ReadOnly | QFile.Text)
+    styleSheet = stylesFile.readAll()
+    styleSheet = str(styleSheet, encoding='utf-8')
 
     app = QApplication(sys.argv)
     app.installTranslator(translator)
+    app.setStyleSheet(styleSheet);
 
     window = MainWindow()
     window.resize(800, 600)
