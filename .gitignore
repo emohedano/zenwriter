@@ -39,3 +39,6 @@ ENV/
 
 # OSX
 .DS_Store
+
+# Keys
+client_secret.json

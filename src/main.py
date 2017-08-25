@@ -3,7 +3,7 @@
 import signal
 
 from PyQt5.QtCore import QTranslator, QFile, Qt, QTimer, QByteArray, QFileInfo, QMargins, QUrl
-from PyQt5.QtGui import QFont, QTextCharFormat, QTextDocumentWriter
+from PyQt5.QtGui import QFont, QTextCharFormat, QTextDocumentWriter, QIcon
 from PyQt5.QtWidgets import (QWidget, QApplication, QFileDialog, QMainWindow, QMenu,
         QMessageBox, QSplitter, QVBoxLayout, QTabWidget)
 from PyQt5.QtQuick import QQuickView
@@ -15,6 +15,7 @@ from gui.highlighter import Highlighter
 from gui.status_bar import StatusBar
 from gui.quote_bar import QuoteBar
 from gui.toc import TocView
+from gui.google_drive_panel import GoogleDriveExplorerView
 from gui.dict_pane import DictPane
 
 AUTOSAVE_TIMEOUT = 5000
@@ -34,14 +35,19 @@ class MainWindow(QMainWindow):
         splitter.setOrientation(Qt.Horizontal)
         
         tocPane = TocView()
+        googleDriveExplorer = GoogleDriveExplorerView()
         quoteBar = QuoteBar()
         statusBar = StatusBar()
         dictPane = DictPane()
 
 
         leftPaneTabs = QTabWidget()
+
         leftPaneTabs.addTab(tocPane, 'Índice')
-        leftPaneTabs.addTab(QWidget(), 'My Drive')
+
+        googleDriveIcon = QIcon('controls/google-drive.svg')
+
+        leftPaneTabs.addTab(googleDriveExplorer, googleDriveIcon, 'Google Drive')
 
         centerPaneLayoutWrapper = QWidget()
         centerPaneLayout = QVBoxLayout(centerPaneLayoutWrapper)
@@ -232,7 +238,7 @@ if __name__ == '__main__':
     app.setStyleSheet(styleSheet);
 
     window = MainWindow()
-    window.resize(800, 600)
+    window.resize(1024, 768)
     window.show()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
