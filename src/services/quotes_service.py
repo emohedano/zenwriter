@@ -12,15 +12,19 @@ class Quote():
 class QuotesService:
 
     @staticmethod
-    def getRandomQuote(lang = 'en'):
+    def getRandomQuote(lang = 'es'):
 
         c = conn.cursor()
 
         query = """
-            SELECT * FROM quotes WHERE _id IN (SELECT _id FROM quotes ORDER BY RANDOM() LIMIT 1)
+            SELECT * FROM quotes WHERE _id IN (
+                SELECT _id FROM quotes
+                where lang = ?
+                ORDER BY RANDOM() LIMIT 1
+            )
         """
 
-        results = c.execute(query)
+        results = c.execute(query, (lang,))
         
         quote = results.fetchone()
 
