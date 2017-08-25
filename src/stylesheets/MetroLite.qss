@@ -41,7 +41,7 @@ ApplicationPalette {
 *::tab-bar,
 *::tab,
 *::section {
-  font-family: "Segoe UI", Frutiger, "Frutiger Linotype", "Dejavu Sans", "Helvetica Neue", Arial, sans-serif;
+  font-family: Verdana, Arial, sans-serif;
   font-size: 12pt;
   margin: 0;
   padding: 0;
@@ -105,6 +105,8 @@ QTextEdit {
   background-color: white;
   color: #111111;
   border: 1px solid #d2d2d2;
+  font-family: Courier;
+  font-size: 14pt;
 }
 
 QToolBar {
@@ -375,11 +377,11 @@ QTreeView::branch {
 }
 
 QTreeView::branch:has-children:closed {
-  image: url(skin:controls/branch_closed.svg);
+  image: url(controls/branch_closed.svg);
 }
 
 QTreeView::branch:has-children:open {
-  image: url(skin:controls/branch_open.svg);
+  image: url(controls/branch_open.svg);
 }
 
 QHeaderView {
